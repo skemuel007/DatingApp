@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -11,17 +11,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Dating.App.API.Entities;
 
 namespace Dating.App.API
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfiguration _config;
+        public Startup(IConfiguration config)
         {
-            Configuration = configuration;
+            _config = config;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -32,6 +33,14 @@ namespace Dating.App.API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Dating.App.API", Version = "v1" });
             });
+
+            // added to user secrets
+            // dotnet user-secrets init
+            // dotnet user-secrets set "ConnectionString:DataContext" "Server=localhost\\SQLEXPRESS;Database=DatingAppDB;User ID=sa;Password=12345;"
+            // dotnet ef migrations add InitialCreate -o Data/Migrations
+            var connectionString = _config.GetSection("ConnectionString").Get<ConnectionSettings>();
+            services.AddDbContext<DataContext>(options =>
+                    options.UseSqlServer(connectionString.DataContext));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
